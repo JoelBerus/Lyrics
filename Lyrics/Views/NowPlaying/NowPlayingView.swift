@@ -28,6 +28,7 @@ struct NowPlayingView: View {
         }
         .onDisappear {
             viewModel.stopProgressTicker()
+            viewModel.stopPlaybackRefreshTicker()
         }
     }
 

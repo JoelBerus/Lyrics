@@ -13,6 +13,7 @@ final class NowPlayingViewModel: ObservableObject {
     private let playbackService: SpotifyPlaybackServiceProtocol
     private let lyricsService: LyricsServiceProtocol
     private var progressCancellable: AnyCancellable?
+    private var playbackRefreshCancellable: AnyCancellable?
 
     init(
         playbackService: SpotifyPlaybackServiceProtocol,
@@ -28,27 +29,13 @@ final class NowPlayingViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let playback = try await playbackService.fetchNowPlaying()
-            self.playback = playback
-            self.currentProgressMS = playback.progressMS
+            try await refreshPlaybackState(forceLyricsReload: true)
             startProgressTicker()
-
-            do {
-                let lyrics = try await lyricsService.fetchLyrics(for: playback.track)
-                self.lyrics = lyrics
-                updateActiveLyricLine()
-                publishCarPlaySnapshot()
-            } catch {
-                self.lyrics = LyricsPayload(
-                    isSynced: false,
-                    lines: [LyricsLine(timestampMS: nil, text: "No encontramos letras para esta canción.")]
-                )
-                self.activeLyricLineID = nil
-                publishCarPlaySnapshot()
-            }
+            startPlaybackRefreshTicker()
         } catch {
             errorMessage = "No pudimos cargar la canción actual."
             stopProgressTicker()
+            stopPlaybackRefreshTicker()
             NowPlayingSharedState.shared.update(snapshot: nil)
         }
     }
@@ -56,6 +43,11 @@ final class NowPlayingViewModel: ObservableObject {
     func stopProgressTicker() {
         progressCancellable?.cancel()
         progressCancellable = nil
+    }
+
+    func stopPlaybackRefreshTicker() {
+        playbackRefreshCancellable?.cancel()
+        playbackRefreshCancellable = nil
     }
 }
 
@@ -73,6 +65,61 @@ private extension NowPlayingViewModel {
                 updateActiveLyricLine()
                 publishCarPlaySnapshot()
             }
+    }
+
+    func startPlaybackRefreshTicker() {
+        stopPlaybackRefreshTicker()
+        playbackRefreshCancellable = Timer.publish(every: 3, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { [weak self] in
+                    await self?.refreshLoopTick()
+                }
+            }
+    }
+
+    func refreshLoopTick() async {
+        do {
+            try await refreshPlaybackState(forceLyricsReload: false)
+        } catch {
+            // Keep existing UI state; intermittent Spotify connectivity is common.
+            #if DEBUG
+            print("[NowPlayingViewModel] refreshPlaybackState failed: \(error)")
+            #endif
+        }
+    }
+
+    func refreshPlaybackState(forceLyricsReload: Bool) async throws {
+        let latestPlayback = try await playbackService.fetchNowPlaying()
+        let previousTrackID = playback?.track.id
+
+        playback = latestPlayback
+        currentProgressMS = latestPlayback.progressMS
+        updateActiveLyricLine()
+
+        let didTrackChange = previousTrackID != latestPlayback.track.id
+        if forceLyricsReload || didTrackChange || lyrics == nil {
+            await loadLyrics(for: latestPlayback.track)
+        } else {
+            publishCarPlaySnapshot()
+        }
+    }
+
+    func loadLyrics(for track: Track) async {
+        do {
+            let fetchedLyrics = try await lyricsService.fetchLyrics(for: track)
+            lyrics = fetchedLyrics
+            updateActiveLyricLine()
+            publishCarPlaySnapshot()
+        } catch {
+            lyrics = LyricsPayload(
+                isSynced: false,
+                lines: [LyricsLine(timestampMS: nil, text: "No encontramos letras para esta canción.")]
+            )
+            activeLyricLineID = nil
+            publishCarPlaySnapshot()
+        }
     }
 
     func updateActiveLyricLine() {

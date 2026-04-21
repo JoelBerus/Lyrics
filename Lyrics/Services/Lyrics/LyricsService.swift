@@ -54,10 +54,22 @@ private extension LyricsService {
     }
 
     func fetchBestMatch(track: Track) async throws -> LRCLIBLyrics {
+        do {
+            return try await fetchBestMatch(track: track, artistName: track.artist)
+        } catch LyricsServiceError.noLyricsFound {
+            let primaryArtist = primaryArtist(from: track.artist)
+            if primaryArtist != track.artist {
+                return try await fetchBestMatch(track: track, artistName: primaryArtist)
+            }
+            throw LyricsServiceError.noLyricsFound
+        }
+    }
+
+    func fetchBestMatch(track: Track, artistName: String) async throws -> LRCLIBLyrics {
         var components = URLComponents(string: "\(AppConstants.lrclibBaseURL)/get")
         components?.queryItems = [
             URLQueryItem(name: "track_name", value: track.title),
-            URLQueryItem(name: "artist_name", value: track.artist),
+            URLQueryItem(name: "artist_name", value: artistName),
             URLQueryItem(name: "album_name", value: track.album),
             URLQueryItem(name: "duration", value: String(track.durationMS))
         ]
@@ -81,6 +93,18 @@ private extension LyricsService {
         }
 
         return try JSONDecoder().decode(LRCLIBLyrics.self, from: data)
+    }
+
+    func primaryArtist(from artists: String) -> String {
+        let separators = [",", "&", " feat.", " feat ", " ft.", " ft "]
+        var candidate = artists
+        for separator in separators {
+            if let range = candidate.range(of: separator, options: .caseInsensitive) {
+                candidate = String(candidate[..<range.lowerBound])
+                break
+            }
+        }
+        return candidate.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func parseSyncedLyrics(_ rawLyrics: String) -> [LyricsLine] {
