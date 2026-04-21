@@ -12,7 +12,9 @@ struct NowPlayingView: View {
                     lyricsCard
                 }
                 .padding()
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .onChange(of: viewModel.activeLyricLineID) { lineID in
                 guard let lineID else { return }
                 withAnimation(.easeInOut(duration: 0.35)) {

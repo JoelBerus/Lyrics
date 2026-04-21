@@ -8,6 +8,7 @@ import CarPlay
 final class CarPlayCoordinator {
     private weak var interfaceController: CPInterfaceController?
     private var stateCancellable: AnyCancellable?
+    private var preferencesCancellable: AnyCancellable?
     private var rootTemplate: CPListTemplate?
 
     func connect(interfaceController: CPInterfaceController) {
@@ -19,6 +20,8 @@ final class CarPlayCoordinator {
     func disconnect() {
         stateCancellable?.cancel()
         stateCancellable = nil
+        preferencesCancellable?.cancel()
+        preferencesCancellable = nil
         interfaceController = nil
         rootTemplate = nil
     }
@@ -29,9 +32,16 @@ final class CarPlayCoordinator {
             .sink { [weak self] snapshot in
                 self?.renderRootTemplate(snapshot: snapshot)
             }
+
+        preferencesCancellable = CarPlayPreferencesStore.shared.$preferences
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.renderRootTemplate(snapshot: NowPlayingSharedState.shared.carPlaySnapshot)
+            }
     }
 
     private func renderRootTemplate(snapshot: CarPlayLyricsSnapshot?) {
+        let preferences = CarPlayPreferencesStore.shared.preferences
         let nowPlayingItem = CPListItem(text: "Now Playing", detailText: "Abrir controles del sistema")
         nowPlayingItem.handler = { [weak self] _, completion in
             self?.interfaceController?.pushTemplate(CPNowPlayingTemplate.shared, animated: true)
@@ -48,13 +58,18 @@ final class CarPlayCoordinator {
             detailText: snapshot?.currentLine ?? "Sin letra activa"
         )
 
-        let nextLineItem = CPListItem(
-            text: "Siguiente",
-            detailText: snapshot?.nextLine ?? "-"
-        )
+        var items: [CPListItem] = [nowPlayingItem, statusItem, currentLineItem]
+
+        if !preferences.showOnlyCurrentLine {
+            let nextLineItem = CPListItem(
+                text: "Siguiente",
+                detailText: snapshot?.nextLine ?? "-"
+            )
+            items.append(nextLineItem)
+        }
 
         let section = CPListSection(
-            items: [nowPlayingItem, statusItem, currentLineItem, nextLineItem],
+            items: items,
             header: "Lyrics Car Companion",
             sectionIndexTitle: nil
         )

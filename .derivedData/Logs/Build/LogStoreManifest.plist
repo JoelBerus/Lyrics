@@ -5,6 +5,49 @@
 	<key>logFormatVersion</key>
 	<integer>12</integer>
 	<key>logs</key>
-	<dict/>
+	<dict>
+		<key>90BD8FB4-57C1-4466-B525-4AA9739DB2B3</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>90BD8FB4-57C1-4466-B525-4AA9739DB2B3.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Lyrics project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Lyrics</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project Lyrics with scheme Lyrics and configuration Debug</string>
+			<key>timeStartedRecording</key>
+			<real>798431669.97047198</real>
+			<key>timeStoppedRecording</key>
+			<real>798431673.59763801</real>
+			<key>title</key>
+			<string>Building project Lyrics with scheme Lyrics and configuration Debug</string>
+			<key>uniqueIdentifier</key>
+			<string>90BD8FB4-57C1-4466-B525-4AA9739DB2B3</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

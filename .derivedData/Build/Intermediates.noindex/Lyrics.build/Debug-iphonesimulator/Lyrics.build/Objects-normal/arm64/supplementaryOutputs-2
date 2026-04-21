@@ -1,0 +1,23 @@
+{
+  "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/CarPlay/CarPlayCoordinator.swift" : {
+    "const-values" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlayCoordinator.swiftconstvalues",
+    "dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlayCoordinator.d",
+    "diagnostics" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlayCoordinator.dia",
+    "object" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlayCoordinator.o",
+    "swift-dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlayCoordinator.swiftdeps"
+  },
+  "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/CarPlay/CarPlaySceneDelegate.swift" : {
+    "const-values" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlaySceneDelegate.swiftconstvalues",
+    "dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlaySceneDelegate.d",
+    "diagnostics" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlaySceneDelegate.dia",
+    "object" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlaySceneDelegate.o",
+    "swift-dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/CarPlaySceneDelegate.swiftdeps"
+  },
+  "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/Core/Extensions/View+GlassBackground.swift" : {
+    "const-values" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/View+GlassBackground.swiftconstvalues",
+    "dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/View+GlassBackground.d",
+    "diagnostics" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/View+GlassBackground.dia",
+    "object" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/View+GlassBackground.o",
+    "swift-dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphonesimulator/Lyrics.build/Objects-normal/arm64/View+GlassBackground.swiftdeps"
+  }
+}
