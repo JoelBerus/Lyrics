@@ -37,7 +37,9 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
     private let spotifyScopes = [
         "user-read-currently-playing",
         "user-read-playback-state",
-        "user-modify-playback-state"
+        "user-modify-playback-state",
+        "user-library-read",
+        "user-library-modify"
     ]
     private var webAuthSession: ASWebAuthenticationSession?
     private let authPresentationContext = AuthPresentationContextProvider()

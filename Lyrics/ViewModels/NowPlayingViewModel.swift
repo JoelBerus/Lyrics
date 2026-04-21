@@ -3,6 +3,11 @@ import Combine
 
 @MainActor
 final class NowPlayingViewModel: ObservableObject {
+    enum LyricsAlignment: String, CaseIterable {
+        case left
+        case center
+    }
+
     @Published var playback: PlaybackState?
     @Published var lyrics: LyricsPayload?
     @Published var isLoading = false
@@ -10,11 +15,17 @@ final class NowPlayingViewModel: ObservableObject {
     @Published var currentProgressMS: Int = 0
     @Published var activeLyricLineID: String?
     @Published var isPerformingPlaybackAction = false
+    @Published var isLyricsBlurEnabled = true
+    @Published var lyricsAlignment: LyricsAlignment = .left
+    @Published var isTrackLiked = false
+    @Published var isTrackLikeLoading = false
+    @Published var isTranslationEnabled = false
 
     private let playbackService: SpotifyPlaybackServiceProtocol
     private let lyricsService: LyricsServiceProtocol
     private var progressCancellable: AnyCancellable?
     private var playbackRefreshCancellable: AnyCancellable?
+    private var likedTrackID: String?
 
     init(
         playbackService: SpotifyPlaybackServiceProtocol,
@@ -88,6 +99,56 @@ final class NowPlayingViewModel: ObservableObject {
     func skipToPrevious() async {
         await performPlaybackCommand {
             try await playbackService.skipToPrevious()
+        }
+    }
+
+    func toggleLike() async {
+        guard let trackID = playback?.track.id else { return }
+        guard !isTrackLikeLoading else { return }
+
+        isTrackLikeLoading = true
+        defer { isTrackLikeLoading = false }
+
+        let shouldSave = !isTrackLiked
+        do {
+            if shouldSave {
+                try await playbackService.saveTrack(trackID: trackID)
+            } else {
+                try await playbackService.removeTrack(trackID: trackID)
+            }
+            isTrackLiked = shouldSave
+            likedTrackID = trackID
+        } catch {
+            errorMessage = "No pudimos actualizar Me gusta."
+        }
+    }
+
+    func setLyricsAlignment(_ alignment: LyricsAlignment) {
+        lyricsAlignment = alignment
+    }
+
+    func toggleLyricsBlur() {
+        isLyricsBlurEnabled.toggle()
+    }
+
+    func toggleTranslation() {
+        isTranslationEnabled.toggle()
+    }
+
+    func seekToLyricLine(_ line: LyricsLine) async {
+        guard let targetTimestamp = line.timestampMS else { return }
+        guard playback != nil else { return }
+
+        isPerformingPlaybackAction = true
+        defer { isPerformingPlaybackAction = false }
+
+        do {
+            try await playbackService.seek(to: targetTimestamp)
+            try await Task.sleep(nanoseconds: 250_000_000)
+            try await refreshPlaybackState(forceLyricsReload: false)
+            errorMessage = nil
+        } catch {
+            errorMessage = playbackActionErrorMessage(error)
         }
     }
 }
@@ -170,11 +231,26 @@ private extension NowPlayingViewModel {
         currentProgressMS = latestPlayback.progressMS
         updateActiveLyricLine()
 
+        if likedTrackID != latestPlayback.track.id {
+            await refreshLikedState(for: latestPlayback.track.id)
+        }
+
         let didTrackChange = previousTrackID != latestPlayback.track.id
         if forceLyricsReload || didTrackChange || lyrics == nil {
             await loadLyrics(for: latestPlayback.track)
         } else {
             publishCarPlaySnapshot()
+        }
+    }
+
+    func refreshLikedState(for trackID: String) async {
+        do {
+            let liked = try await playbackService.isTrackSaved(trackID: trackID)
+            isTrackLiked = liked
+            likedTrackID = trackID
+        } catch {
+            isTrackLiked = false
+            likedTrackID = trackID
         }
     }
 
