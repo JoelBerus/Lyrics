@@ -252,7 +252,11 @@ private extension SpotifyAuthService {
         if !bundleValue.isEmpty {
             return bundleValue
         }
-        return processClientID()
+        let processValue = processClientID()
+        if !processValue.isEmpty {
+            return processValue
+        }
+        return AppConstants.spotifyClientIDFallback.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func bundleClientID() -> String {
