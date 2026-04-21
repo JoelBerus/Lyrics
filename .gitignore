@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Xcode user data
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+xcuserdata/
+
+# Build artifacts
+build/
+DerivedData/
+.derivedData/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Local tool folders
+.qodo/
+.cursor/
+
