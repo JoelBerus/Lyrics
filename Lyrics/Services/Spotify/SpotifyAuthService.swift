@@ -44,6 +44,9 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
 
     func authorizationURL() -> URL? {
         let clientID = resolvedClientID()
+        #if DEBUG
+        print("[SpotifyAuthService] authorizationURL - envClientID=\(masked(environment.spotifyClientID)) bundleClientID=\(masked(bundleClientID())) processEnvClientID=\(masked(processClientID())) resolvedClientID=\(masked(clientID))")
+        #endif
         guard !clientID.isEmpty else { return nil }
         let state = randomURLSafeString()
         let codeVerifier = randomURLSafeString(length: 96)
@@ -245,13 +248,27 @@ private extension SpotifyAuthService {
         if !environment.spotifyClientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return environment.spotifyClientID.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        let bundleValue = (Bundle.main.object(forInfoDictionaryKey: "SPOTIFY_CLIENT_ID") as? String)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let bundleValue = bundleClientID()
         if !bundleValue.isEmpty {
             return bundleValue
         }
-        return ProcessInfo.processInfo.environment["SPOTIFY_CLIENT_ID"]?
+        return processClientID()
+    }
+
+    func bundleClientID() -> String {
+        (Bundle.main.object(forInfoDictionaryKey: "SPOTIFY_CLIENT_ID") as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    func processClientID() -> String {
+        ProcessInfo.processInfo.environment["SPOTIFY_CLIENT_ID"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    func masked(_ value: String) -> String {
+        guard !value.isEmpty else { return "<empty>" }
+        if value.count <= 8 { return value }
+        return "\(value.prefix(4))...\(value.suffix(4)) (len:\(value.count))"
     }
 }
 
