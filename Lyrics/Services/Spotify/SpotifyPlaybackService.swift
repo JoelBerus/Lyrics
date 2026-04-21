@@ -11,6 +11,7 @@ protocol SpotifyPlaybackServiceProtocol {
 enum SpotifyPlaybackError: Error {
     case noActivePlayback
     case invalidResponse
+    case commandRejected(statusCode: Int)
 }
 
 final class SpotifyPlaybackService: SpotifyPlaybackServiceProtocol {
@@ -33,19 +34,19 @@ final class SpotifyPlaybackService: SpotifyPlaybackServiceProtocol {
     }
 
     func play() async throws {
-        try await sendPlaybackCommand(path: "/me/player/play")
+        try await sendPlaybackCommand(path: "/me/player/play", method: "PUT")
     }
 
     func pause() async throws {
-        try await sendPlaybackCommand(path: "/me/player/pause")
+        try await sendPlaybackCommand(path: "/me/player/pause", method: "PUT")
     }
 
     func skipToNext() async throws {
-        try await sendPlaybackCommand(path: "/me/player/next")
+        try await sendPlaybackCommand(path: "/me/player/next", method: "POST")
     }
 
     func skipToPrevious() async throws {
-        try await sendPlaybackCommand(path: "/me/player/previous")
+        try await sendPlaybackCommand(path: "/me/player/previous", method: "POST")
     }
 
     private func requestNowPlaying(with accessToken: String) async throws -> PlaybackState {
@@ -88,7 +89,7 @@ final class SpotifyPlaybackService: SpotifyPlaybackServiceProtocol {
         )
     }
 
-    private func sendPlaybackCommand(path: String) async throws {
+    private func sendPlaybackCommand(path: String, method: String) async throws {
         let accessToken: String
         do {
             accessToken = try await authService.validAccessToken()
@@ -101,16 +102,21 @@ final class SpotifyPlaybackService: SpotifyPlaybackServiceProtocol {
         }
 
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = method
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (_, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SpotifyPlaybackError.invalidResponse
         }
 
         guard [200, 202, 204].contains(httpResponse.statusCode) else {
-            throw SpotifyPlaybackError.invalidResponse
+            #if DEBUG
+            let body = String(data: data, encoding: .utf8) ?? "<empty>"
+            print("[SpotifyPlaybackService] Command rejected \(method) \(path) status=\(httpResponse.statusCode) body=\(body)")
+            #endif
+            throw SpotifyPlaybackError.commandRejected(statusCode: httpResponse.statusCode)
         }
     }
 }

@@ -75,7 +75,7 @@ final class NowPlayingViewModel: ObservableObject {
             try await refreshPlaybackState(forceLyricsReload: false)
             errorMessage = nil
         } catch {
-            errorMessage = "No pudimos cambiar el estado de reproduccion."
+            errorMessage = playbackActionErrorMessage(error)
         }
     }
 
@@ -102,7 +102,23 @@ private extension NowPlayingViewModel {
             try await refreshPlaybackState(forceLyricsReload: false)
             errorMessage = nil
         } catch {
-            errorMessage = "No pudimos controlar la reproduccion."
+            errorMessage = playbackActionErrorMessage(error)
+        }
+    }
+
+    func playbackActionErrorMessage(_ error: Error) -> String {
+        guard let playbackError = error as? SpotifyPlaybackError else {
+            return "No pudimos controlar la reproduccion."
+        }
+        switch playbackError {
+        case .commandRejected(let statusCode) where statusCode == 403:
+            return "Spotify rechazo el control. Reconecta para actualizar permisos."
+        case .commandRejected(let statusCode) where statusCode == 404:
+            return "No hay dispositivo activo en Spotify para controlar."
+        case .commandRejected(let statusCode):
+            return "Spotify devolvio error \(statusCode) al controlar."
+        default:
+            return "No pudimos controlar la reproduccion."
         }
     }
 
