@@ -17,6 +17,7 @@ protocol SpotifyAuthServiceProtocol {
 
 enum SpotifyAuthError: Error {
     case notConfigured
+    case insufficientScopes
     case invalidRedirect
     case authorizationRejected
     case codeVerifierNotFound
@@ -92,7 +93,8 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
     }
 
     func hasValidSession() -> Bool {
-        tokenStore.readToken() != nil
+        guard let token = tokenStore.readToken() else { return false }
+        return token.containsAllScopes(spotifyScopes)
     }
 
     func handleRedirectURL(_ url: URL) async throws {
@@ -130,6 +132,9 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
     func validAccessToken() async throws -> String {
         guard let token = tokenStore.readToken() else {
             throw SpotifyAuthError.notConfigured
+        }
+        guard token.containsAllScopes(spotifyScopes) else {
+            throw SpotifyAuthError.insufficientScopes
         }
 
         if token.isExpired {

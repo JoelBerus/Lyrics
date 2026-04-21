@@ -111,6 +111,8 @@ private extension NowPlayingViewModel {
             return "No pudimos controlar la reproduccion."
         }
         switch playbackError {
+        case .commandRejected(let statusCode) where statusCode == 401:
+            return "Faltan permisos de control. Desconecta y reconecta Spotify."
         case .commandRejected(let statusCode) where statusCode == 403:
             return "Spotify rechazo el control. Reconecta para actualizar permisos."
         case .commandRejected(let statusCode) where statusCode == 404:
