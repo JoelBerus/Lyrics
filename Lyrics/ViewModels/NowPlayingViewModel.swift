@@ -9,6 +9,7 @@ final class NowPlayingViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var currentProgressMS: Int = 0
     @Published var activeLyricLineID: String?
+    @Published var isPerformingPlaybackAction = false
 
     private let playbackService: SpotifyPlaybackServiceProtocol
     private let lyricsService: LyricsServiceProtocol
@@ -49,9 +50,62 @@ final class NowPlayingViewModel: ObservableObject {
         playbackRefreshCancellable?.cancel()
         playbackRefreshCancellable = nil
     }
+
+    func manualRefresh() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            try await refreshPlaybackState(forceLyricsReload: false)
+            errorMessage = nil
+        } catch {
+            errorMessage = "No pudimos actualizar la reproduccion."
+        }
+    }
+
+    func togglePlayPause() async {
+        guard let playback else { return }
+        isPerformingPlaybackAction = true
+        defer { isPerformingPlaybackAction = false }
+        do {
+            if playback.isPlaying {
+                try await playbackService.pause()
+            } else {
+                try await playbackService.play()
+            }
+            try await refreshPlaybackState(forceLyricsReload: false)
+            errorMessage = nil
+        } catch {
+            errorMessage = "No pudimos cambiar el estado de reproduccion."
+        }
+    }
+
+    func skipToNext() async {
+        await performPlaybackCommand {
+            try await playbackService.skipToNext()
+        }
+    }
+
+    func skipToPrevious() async {
+        await performPlaybackCommand {
+            try await playbackService.skipToPrevious()
+        }
+    }
 }
 
 private extension NowPlayingViewModel {
+    func performPlaybackCommand(_ command: () async throws -> Void) async {
+        isPerformingPlaybackAction = true
+        defer { isPerformingPlaybackAction = false }
+        do {
+            try await command()
+            try await Task.sleep(nanoseconds: 350_000_000)
+            try await refreshPlaybackState(forceLyricsReload: false)
+            errorMessage = nil
+        } catch {
+            errorMessage = "No pudimos controlar la reproduccion."
+        }
+    }
+
     func startProgressTicker() {
         stopProgressTicker()
         progressCancellable = Timer.publish(every: 0.5, on: .main, in: .common)

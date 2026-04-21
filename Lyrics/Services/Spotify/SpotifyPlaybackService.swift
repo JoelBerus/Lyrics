@@ -2,6 +2,10 @@ import Foundation
 
 protocol SpotifyPlaybackServiceProtocol {
     func fetchNowPlaying() async throws -> PlaybackState
+    func play() async throws
+    func pause() async throws
+    func skipToNext() async throws
+    func skipToPrevious() async throws
 }
 
 enum SpotifyPlaybackError: Error {
@@ -26,6 +30,22 @@ final class SpotifyPlaybackService: SpotifyPlaybackServiceProtocol {
             let refreshed = try await authService.refreshAccessToken()
             return try await requestNowPlaying(with: refreshed)
         }
+    }
+
+    func play() async throws {
+        try await sendPlaybackCommand(path: "/me/player/play")
+    }
+
+    func pause() async throws {
+        try await sendPlaybackCommand(path: "/me/player/pause")
+    }
+
+    func skipToNext() async throws {
+        try await sendPlaybackCommand(path: "/me/player/next")
+    }
+
+    func skipToPrevious() async throws {
+        try await sendPlaybackCommand(path: "/me/player/previous")
     }
 
     private func requestNowPlaying(with accessToken: String) async throws -> PlaybackState {
@@ -66,6 +86,32 @@ final class SpotifyPlaybackService: SpotifyPlaybackServiceProtocol {
                 durationMS: item.durationMS
             )
         )
+    }
+
+    private func sendPlaybackCommand(path: String) async throws {
+        let accessToken: String
+        do {
+            accessToken = try await authService.validAccessToken()
+        } catch {
+            accessToken = try await authService.refreshAccessToken()
+        }
+
+        guard let url = URL(string: "\(AppConstants.spotifyBaseURL)\(path)") else {
+            throw SpotifyPlaybackError.invalidResponse
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw SpotifyPlaybackError.invalidResponse
+        }
+
+        guard [200, 202, 204].contains(httpResponse.statusCode) else {
+            throw SpotifyPlaybackError.invalidResponse
+        }
     }
 }
 

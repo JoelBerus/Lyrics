@@ -23,6 +23,15 @@ struct NowPlayingView: View {
             }
         }
         .navigationTitle("Reproductor")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task { await viewModel.manualRefresh() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+        }
         .task {
             await viewModel.load()
         }
@@ -34,26 +43,94 @@ struct NowPlayingView: View {
 
     private var headerCard: some View {
         GlassCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(viewModel.playback?.track.title ?? "Sin reproducción")
-                    .font(.title3.weight(.semibold))
-                Text(viewModel.playback?.track.artist ?? "Conecta Spotify para empezar")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                if viewModel.playback?.isPlaying == true {
-                    Text("Progreso: \(formattedTime(viewModel.currentProgressMS))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Label("Play", systemImage: "play.fill")
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    artworkView
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(viewModel.playback?.track.title ?? "Sin reproducción")
+                            .font(.title3.weight(.semibold))
+                        Text(viewModel.playback?.track.artist ?? "Conecta Spotify para empezar")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text("Progreso: \(formattedTime(viewModel.currentProgressMS))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     Spacer()
-                    Label("Siguiente", systemImage: "forward.fill")
+                    Button {
+                        Task { await viewModel.manualRefresh() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise.circle")
+                            .font(.title3)
+                    }
                 }
-                .font(.subheadline)
+
+                HStack(spacing: 24) {
+                    Button {
+                        Task { await viewModel.skipToPrevious() }
+                    } label: {
+                        Image(systemName: "backward.fill")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        Task { await viewModel.togglePlayPause() }
+                    } label: {
+                        Image(systemName: (viewModel.playback?.isPlaying ?? false) ? "pause.circle.fill" : "play.circle.fill")
+                            .font(.system(size: 34))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        Task { await viewModel.skipToNext() }
+                    } label: {
+                        Image(systemName: "forward.fill")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
+                }
                 .padding(.top, 8)
+                .opacity(viewModel.isPerformingPlaybackAction ? 0.6 : 1)
+                .disabled(viewModel.isPerformingPlaybackAction || viewModel.playback == nil)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var artworkView: some View {
+        Group {
+            if let artworkURL = viewModel.playback?.track.artworkURL {
+                AsyncImage(url: artworkURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    case .failure:
+                        placeholderArtwork
+                    case .empty:
+                        ProgressView()
+                    @unknown default:
+                        placeholderArtwork
+                    }
+                }
+            } else {
+                placeholderArtwork
+            }
+        }
+        .frame(width: 92, height: 92)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var placeholderArtwork: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.white.opacity(0.12))
+            Image(systemName: "music.note")
+                .font(.title2)
+                .foregroundStyle(.secondary)
         }
     }
 

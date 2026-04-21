@@ -9,6 +9,7 @@
 5. Request scopes:
    - `user-read-currently-playing`
    - `user-read-playback-state`
+   - `user-modify-playback-state`
 6. Keep the app in test mode with approved test users until release.
 
 ## 2) Apple Developer + Entitlements
