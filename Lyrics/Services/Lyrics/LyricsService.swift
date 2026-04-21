@@ -44,12 +44,28 @@ final class LyricsService: LyricsServiceProtocol {
 
 private extension LyricsService {
     struct LRCLIBLyrics: Decodable {
+        let trackName: String?
+        let artistName: String?
         let syncedLyrics: String?
         let plainLyrics: String?
 
         enum CodingKeys: String, CodingKey {
+            case trackName
+            case trackNameSnake = "track_name"
+            case artistName
+            case artistNameSnake = "artist_name"
             case syncedLyrics
             case plainLyrics
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            trackName = try container.decodeIfPresent(String.self, forKey: .trackName) ??
+                container.decodeIfPresent(String.self, forKey: .trackNameSnake)
+            artistName = try container.decodeIfPresent(String.self, forKey: .artistName) ??
+                container.decodeIfPresent(String.self, forKey: .artistNameSnake)
+            syncedLyrics = try container.decodeIfPresent(String.self, forKey: .syncedLyrics)
+            plainLyrics = try container.decodeIfPresent(String.self, forKey: .plainLyrics)
         }
     }
 
@@ -66,6 +82,14 @@ private extension LyricsService {
     }
 
     func fetchBestMatch(track: Track, artistName: String) async throws -> LRCLIBLyrics {
+        do {
+            return try await fetchStrictMatch(track: track, artistName: artistName)
+        } catch LyricsServiceError.noLyricsFound {
+            return try await searchBestCandidate(track: track, artistName: artistName)
+        }
+    }
+
+    func fetchStrictMatch(track: Track, artistName: String) async throws -> LRCLIBLyrics {
         var components = URLComponents(string: "\(AppConstants.lrclibBaseURL)/get")
         components?.queryItems = [
             URLQueryItem(name: "track_name", value: track.title),
@@ -93,6 +117,74 @@ private extension LyricsService {
         }
 
         return try JSONDecoder().decode(LRCLIBLyrics.self, from: data)
+    }
+
+    func searchBestCandidate(track: Track, artistName: String) async throws -> LRCLIBLyrics {
+        var components = URLComponents(string: "\(AppConstants.lrclibBaseURL)/search")
+        components?.queryItems = [
+            URLQueryItem(name: "track_name", value: track.title),
+            URLQueryItem(name: "artist_name", value: artistName)
+        ]
+        guard let url = components?.url else {
+            throw LyricsServiceError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LyricsServiceError.invalidResponse
+        }
+
+        guard 200..<300 ~= httpResponse.statusCode else {
+            throw LyricsServiceError.noLyricsFound
+        }
+
+        let candidates = try JSONDecoder().decode([LRCLIBLyrics].self, from: data)
+        guard let candidate = bestCandidate(from: candidates, track: track, artistName: artistName) else {
+            throw LyricsServiceError.noLyricsFound
+        }
+        return candidate
+    }
+
+    func bestCandidate(from candidates: [LRCLIBLyrics], track: Track, artistName: String) -> LRCLIBLyrics? {
+        let normalizedTrack = normalize(track.title)
+        let normalizedArtist = normalize(artistName)
+
+        return candidates
+            .filter { candidate in
+                let hasLyrics = !(candidate.syncedLyrics?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) ||
+                    !(candidate.plainLyrics?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+                return hasLyrics
+            }
+            .sorted { lhs, rhs in
+                score(lhs, track: normalizedTrack, artist: normalizedArtist) >
+                    score(rhs, track: normalizedTrack, artist: normalizedArtist)
+            }
+            .first
+    }
+
+    func score(_ candidate: LRCLIBLyrics, track: String, artist: String) -> Int {
+        let candidateTrack = normalize(candidate.trackName ?? "")
+        let candidateArtist = normalize(candidate.artistName ?? "")
+        var score = 0
+
+        if candidateTrack == track { score += 6 }
+        else if candidateTrack.contains(track) || track.contains(candidateTrack) { score += 3 }
+
+        if candidateArtist == artist { score += 6 }
+        else if candidateArtist.contains(artist) || artist.contains(candidateArtist) { score += 3 }
+
+        if !(candidate.syncedLyrics?.isEmpty ?? true) { score += 2 }
+        if !(candidate.plainLyrics?.isEmpty ?? true) { score += 1 }
+
+        return score
+    }
+
+    func normalize(_ value: String) -> String {
+        value
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func primaryArtist(from artists: String) -> String {
