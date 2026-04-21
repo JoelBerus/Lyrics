@@ -1,8 +1,13 @@
 import Foundation
 import CryptoKit
+import AuthenticationServices
+#if canImport(UIKit)
+import UIKit
+#endif
 
 protocol SpotifyAuthServiceProtocol {
     func authorizationURL() -> URL?
+    func authorize() async throws
     func hasValidSession() -> Bool
     func handleRedirectURL(_ url: URL) async throws
     func validAccessToken() async throws -> String
@@ -19,6 +24,7 @@ enum SpotifyAuthError: Error {
     case missingAuthorizationCode
     case invalidTokenResponse
     case missingRefreshToken
+    case cancelled
 }
 
 final class SpotifyAuthService: SpotifyAuthServiceProtocol {
@@ -31,6 +37,8 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
         "user-read-currently-playing",
         "user-read-playback-state"
     ]
+    private var webAuthSession: ASWebAuthenticationSession?
+    private let authPresentationContext = AuthPresentationContextProvider()
 
     init(
         environment: AppEnvironment,
@@ -67,6 +75,19 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
             URLQueryItem(name: "show_dialog", value: "true")
         ]
         return components?.url
+    }
+
+    func authorize() async throws {
+        guard let authURL = authorizationURL(),
+              let callbackScheme = URL(string: AppConstants.spotifyRedirectURI)?.scheme else {
+            throw SpotifyAuthError.notConfigured
+        }
+
+        let callbackURL = try await startWebAuthentication(
+            authURL: authURL,
+            callbackScheme: callbackScheme
+        )
+        try await handleRedirectURL(callbackURL)
     }
 
     func hasValidSession() -> Bool {
@@ -159,6 +180,19 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
 }
 
 private extension SpotifyAuthService {
+    final class AuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+        func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+            #if canImport(UIKit)
+            return UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap { $0.windows }
+                .first(where: { $0.isKeyWindow }) ?? ASPresentationAnchor()
+            #else
+            return ASPresentationAnchor()
+            #endif
+        }
+    }
+
     struct TokenResponse: Decodable {
         let accessToken: String
         let tokenType: String
@@ -218,6 +252,36 @@ private extension SpotifyAuthService {
             scope: parsed.scope,
             expiresAt: Date().addingTimeInterval(TimeInterval(parsed.expiresIn))
         )
+    }
+
+    func startWebAuthentication(authURL: URL, callbackScheme: String) async throws -> URL {
+        try await withCheckedThrowingContinuation { continuation in
+            let session = ASWebAuthenticationSession(
+                url: authURL,
+                callbackURLScheme: callbackScheme
+            ) { callbackURL, error in
+                if let error {
+                    if let authError = error as? ASWebAuthenticationSessionError,
+                       authError.code == .canceledLogin {
+                        continuation.resume(throwing: SpotifyAuthError.cancelled)
+                    } else {
+                        continuation.resume(throwing: error)
+                    }
+                    return
+                }
+
+                guard let callbackURL else {
+                    continuation.resume(throwing: SpotifyAuthError.invalidRedirect)
+                    return
+                }
+                continuation.resume(returning: callbackURL)
+            }
+
+            session.presentationContextProvider = authPresentationContext
+            session.prefersEphemeralWebBrowserSession = true
+            webAuthSession = session
+            session.start()
+        }
     }
 
     func codeChallenge(for verifier: String) -> String {

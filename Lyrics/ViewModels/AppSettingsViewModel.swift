@@ -6,6 +6,7 @@ final class AppSettingsViewModel: ObservableObject {
     @Published var selectedTheme: AppTheme = .system
     @Published var isSpotifyConnected = false
     @Published var authErrorMessage: String?
+    @Published var isAuthorizing = false
 
     private let authService: SpotifyAuthServiceProtocol
 
@@ -28,6 +29,21 @@ final class AppSettingsViewModel: ObservableObject {
             #endif
         }
         return url
+    }
+
+    func connectSpotify() async {
+        isAuthorizing = true
+        defer { isAuthorizing = false }
+
+        do {
+            try await authService.authorize()
+            authErrorMessage = nil
+        } catch SpotifyAuthError.cancelled {
+            authErrorMessage = "Inicio de sesión cancelado."
+        } catch {
+            authErrorMessage = "No fue posible iniciar sesión con Spotify."
+        }
+        refreshConnectionStatus()
     }
 
     func handleRedirectURL(_ url: URL) async {

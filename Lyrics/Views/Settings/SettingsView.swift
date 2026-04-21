@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject var viewModel: AppSettingsViewModel
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
         ZStack {
@@ -27,13 +26,22 @@ struct SettingsView: View {
                             viewModel.disconnectSpotify()
                         }
                     } else {
-                        Button("Conectar con Spotify") {
-                            guard let url = viewModel.spotifyAuthorizationURL() else {
-                                viewModel.authErrorMessage = "Configura SPOTIFY_CLIENT_ID en Info.plist."
-                                return
+                        Button {
+                            Task {
+                                if viewModel.spotifyAuthorizationURL() == nil {
+                                    viewModel.authErrorMessage = "Configura SPOTIFY_CLIENT_ID en Info.plist."
+                                    return
+                                }
+                                await viewModel.connectSpotify()
                             }
-                            openURL(url)
+                        } label: {
+                            if viewModel.isAuthorizing {
+                                ProgressView()
+                            } else {
+                                Text("Conectar con Spotify")
+                            }
                         }
+                        .disabled(viewModel.isAuthorizing)
                     }
                 }
 

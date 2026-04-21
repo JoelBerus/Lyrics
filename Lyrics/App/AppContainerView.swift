@@ -29,11 +29,6 @@ struct AppContainerView: View {
             nowPlayingViewModel: nowPlayingViewModel
         )
         .preferredColorScheme(settingsViewModel.selectedTheme.colorScheme)
-        .onOpenURL { url in
-            Task {
-                await settingsViewModel.handleRedirectURL(url)
-            }
-        }
     }
 }
 
