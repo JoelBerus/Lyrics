@@ -1,0 +1,56 @@
+{
+  "source": "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/Views/NowPlaying/NowPlayingView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Reproductor",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "Progreso: %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "Play",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "Siguiente",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Letras",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cargando letras...",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 74
+        }
+      }
+    ]
+  },
+  "version": 1
+}

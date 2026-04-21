@@ -1,0 +1,23 @@
+{
+  "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/App/AppContainerView.swift" : {
+    "const-values" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppContainerView.swiftconstvalues",
+    "dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppContainerView.d",
+    "diagnostics" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppContainerView.dia",
+    "object" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppContainerView.o",
+    "swift-dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppContainerView.swiftdeps"
+  },
+  "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/App/AppRouter.swift" : {
+    "const-values" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppRouter.swiftconstvalues",
+    "dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppRouter.d",
+    "diagnostics" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppRouter.dia",
+    "object" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppRouter.o",
+    "swift-dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/AppRouter.swiftdeps"
+  },
+  "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/CarPlay/Templates/NowPlayingTemplateBuilder.swift" : {
+    "const-values" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/NowPlayingTemplateBuilder.swiftconstvalues",
+    "dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/NowPlayingTemplateBuilder.d",
+    "diagnostics" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/NowPlayingTemplateBuilder.dia",
+    "object" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/NowPlayingTemplateBuilder.o",
+    "swift-dependencies" : "/Users/joelbermudez/Documents/workspace/Lyrics/.derivedData/Build/Intermediates.noindex/Lyrics.build/Debug-iphoneos/Lyrics.build/Objects-normal/arm64/NowPlayingTemplateBuilder.swiftdeps"
+  }
+}

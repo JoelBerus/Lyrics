@@ -1,0 +1,64 @@
+{
+  "source": "/Users/joelbermudez/Documents/workspace/Lyrics/Lyrics/Views/Settings/SettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Configuración",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "Spotify",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 9
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tema",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 32
+        }
+      },
+      {
+        "comment": "",
+        "key": "Conectado",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 10
+        }
+      },
+      {
+        "comment": "",
+        "key": "Desconectar",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Conectar con Spotify",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "Apariencia",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 33
+        }
+      }
+    ]
+  },
+  "version": 1
+}
