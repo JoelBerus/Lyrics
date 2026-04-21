@@ -43,7 +43,8 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
     }
 
     func authorizationURL() -> URL? {
-        guard !environment.spotifyClientID.isEmpty else { return nil }
+        let clientID = resolvedClientID()
+        guard !clientID.isEmpty else { return nil }
         let state = randomURLSafeString()
         let codeVerifier = randomURLSafeString(length: 96)
         let codeChallenge = codeChallenge(for: codeVerifier)
@@ -54,7 +55,7 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
         var components = URLComponents(string: "https://accounts.spotify.com/authorize")
         components?.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
-            URLQueryItem(name: "client_id", value: environment.spotifyClientID),
+            URLQueryItem(name: "client_id", value: clientID),
             URLQueryItem(name: "redirect_uri", value: AppConstants.spotifyRedirectURI),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
             URLQueryItem(name: "code_challenge", value: codeChallenge),
@@ -128,7 +129,7 @@ final class SpotifyAuthService: SpotifyAuthServiceProtocol {
         let body = formEncoded([
             "grant_type": "refresh_token",
             "refresh_token": token.refreshToken,
-            "client_id": environment.spotifyClientID
+            "client_id": resolvedClientID()
         ])
         request.httpBody = body.data(using: .utf8)
 
@@ -196,7 +197,7 @@ private extension SpotifyAuthService {
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": AppConstants.spotifyRedirectURI,
-            "client_id": environment.spotifyClientID,
+            "client_id": resolvedClientID(),
             "code_verifier": codeVerifier
         ])
         request.httpBody = body.data(using: .utf8)
@@ -238,6 +239,19 @@ private extension SpotifyAuthService {
         var allowed = CharacterSet.alphanumerics
         allowed.insert(charactersIn: "-._~")
         return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
+    }
+
+    func resolvedClientID() -> String {
+        if !environment.spotifyClientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return environment.spotifyClientID.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        let bundleValue = (Bundle.main.object(forInfoDictionaryKey: "SPOTIFY_CLIENT_ID") as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !bundleValue.isEmpty {
+            return bundleValue
+        }
+        return ProcessInfo.processInfo.environment["SPOTIFY_CLIENT_ID"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 }
 

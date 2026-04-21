@@ -15,7 +15,11 @@ final class AppSettingsViewModel: ObservableObject {
     }
 
     func spotifyAuthorizationURL() -> URL? {
-        authService.authorizationURL()
+        let url = authService.authorizationURL()
+        if url != nil {
+            authErrorMessage = nil
+        }
+        return url
     }
 
     func handleRedirectURL(_ url: URL) async {

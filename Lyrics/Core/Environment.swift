@@ -4,8 +4,10 @@ struct AppEnvironment {
     var spotifyClientID: String
 
     static var `default`: AppEnvironment {
-        AppEnvironment(
-            spotifyClientID: Bundle.main.object(forInfoDictionaryKey: "SPOTIFY_CLIENT_ID") as? String ?? ""
+        let infoValue = (Bundle.main.object(forInfoDictionaryKey: "SPOTIFY_CLIENT_ID") as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return AppEnvironment(
+            spotifyClientID: infoValue
         )
     }
 }
