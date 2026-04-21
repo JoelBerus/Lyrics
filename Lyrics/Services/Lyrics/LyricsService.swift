@@ -18,11 +18,17 @@ final class LyricsService: LyricsServiceProtocol {
     }
 
     func fetchLyrics(for track: Track) async throws -> LyricsPayload {
+        #if DEBUG
+        print("[LyricsService] fetchLyrics start track='\(track.title)' artist='\(track.artist)' album='\(track.album)' durationMS=\(track.durationMS)")
+        #endif
         let candidate = try await fetchBestMatch(track: track)
 
         if let syncedLyrics = candidate.syncedLyrics, !syncedLyrics.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let syncedLines = parseSyncedLyrics(syncedLyrics)
             if !syncedLines.isEmpty {
+                #if DEBUG
+                print("[LyricsService] returning synced lyrics lines=\(syncedLines.count)")
+                #endif
                 return LyricsPayload(isSynced: true, lines: syncedLines)
             }
         }
@@ -34,10 +40,16 @@ final class LyricsService: LyricsServiceProtocol {
                 .filter { !$0.isEmpty }
                 .map { LyricsLine(timestampMS: nil, text: $0) }
             if !plainLines.isEmpty {
+                #if DEBUG
+                print("[LyricsService] returning plain lyrics lines=\(plainLines.count)")
+                #endif
                 return LyricsPayload(isSynced: false, lines: plainLines)
             }
         }
 
+        #if DEBUG
+        print("[LyricsService] no usable lyrics after candidate parsing")
+        #endif
         throw LyricsServiceError.noLyricsFound
     }
 }
@@ -71,12 +83,21 @@ private extension LyricsService {
 
     func fetchBestMatch(track: Track) async throws -> LRCLIBLyrics {
         do {
+            #if DEBUG
+            print("[LyricsService] trying strict match with full artist '\(track.artist)'")
+            #endif
             return try await fetchBestMatch(track: track, artistName: track.artist)
         } catch LyricsServiceError.noLyricsFound {
             let primaryArtist = primaryArtist(from: track.artist)
             if primaryArtist != track.artist {
+                #if DEBUG
+                print("[LyricsService] strict match failed, retrying with primary artist '\(primaryArtist)'")
+                #endif
                 return try await fetchBestMatch(track: track, artistName: primaryArtist)
             }
+            #if DEBUG
+            print("[LyricsService] strict match failed and no alternate artist")
+            #endif
             throw LyricsServiceError.noLyricsFound
         }
     }
@@ -107,6 +128,9 @@ private extension LyricsService {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LyricsServiceError.invalidResponse
         }
+        #if DEBUG
+        print("[LyricsService] /get status=\(httpResponse.statusCode) artist='\(artistName)'")
+        #endif
 
         if httpResponse.statusCode == 404 {
             throw LyricsServiceError.noLyricsFound
@@ -135,15 +159,27 @@ private extension LyricsService {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LyricsServiceError.invalidResponse
         }
+        #if DEBUG
+        print("[LyricsService] /search status=\(httpResponse.statusCode) artist='\(artistName)'")
+        #endif
 
         guard 200..<300 ~= httpResponse.statusCode else {
             throw LyricsServiceError.noLyricsFound
         }
 
         let candidates = try JSONDecoder().decode([LRCLIBLyrics].self, from: data)
+        #if DEBUG
+        print("[LyricsService] /search candidates=\(candidates.count)")
+        #endif
         guard let candidate = bestCandidate(from: candidates, track: track, artistName: artistName) else {
+            #if DEBUG
+            print("[LyricsService] /search had no suitable candidate")
+            #endif
             throw LyricsServiceError.noLyricsFound
         }
+        #if DEBUG
+        print("[LyricsService] selected candidate track='\(candidate.trackName ?? "-")' artist='\(candidate.artistName ?? "-")'")
+        #endif
         return candidate
     }
 

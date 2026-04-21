@@ -185,6 +185,9 @@ private extension NowPlayingViewModel {
             updateActiveLyricLine()
             publishCarPlaySnapshot()
         } catch {
+            #if DEBUG
+            print("[NowPlayingViewModel] loadLyrics failed for track='\(track.title)' artist='\(track.artist)' error=\(error)")
+            #endif
             lyrics = LyricsPayload(
                 isSynced: false,
                 lines: [LyricsLine(timestampMS: nil, text: "No encontramos letras para esta canción.")]
