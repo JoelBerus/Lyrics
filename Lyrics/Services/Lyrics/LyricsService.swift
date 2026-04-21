@@ -87,7 +87,7 @@ private extension LyricsService {
             print("[LyricsService] trying strict match with full artist '\(track.artist)'")
             #endif
             return try await fetchBestMatch(track: track, artistName: track.artist)
-        } catch LyricsServiceError.noLyricsFound {
+        } catch {
             let primaryArtist = primaryArtist(from: track.artist)
             if primaryArtist != track.artist {
                 #if DEBUG
@@ -116,7 +116,7 @@ private extension LyricsService {
             URLQueryItem(name: "track_name", value: track.title),
             URLQueryItem(name: "artist_name", value: artistName),
             URLQueryItem(name: "album_name", value: track.album),
-            URLQueryItem(name: "duration", value: String(track.durationMS))
+            URLQueryItem(name: "duration", value: String(track.durationMS / 1000))
         ]
         guard let url = components?.url else {
             throw LyricsServiceError.invalidURL
@@ -132,7 +132,7 @@ private extension LyricsService {
         print("[LyricsService] /get status=\(httpResponse.statusCode) artist='\(artistName)'")
         #endif
 
-        if httpResponse.statusCode == 404 {
+        if httpResponse.statusCode == 400 || httpResponse.statusCode == 404 {
             throw LyricsServiceError.noLyricsFound
         }
 
